@@ -1,15 +1,38 @@
+#include <setjmp.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <setjmp.h>
 
-int main()
-{
-    jmp_buf env;
-    int i;
-    i = setjmp(env);
-    printf("i = %d\n", i);
-    if (i != 0) exit(0);
-    longjmp(env, 1); //* \label{setjmp-one}
-    printf("Does this line get printed?\n");
-    
+jmp_buf buf;
+
+int error1 = 0;
+int error2 = 1;
+
+void foo(void), bar(void);
+
+int main() {
+  switch (setjmp(buf)) {
+  case 0:
+    foo();
+    break;
+  case 1:
+    printf("Detected an error1 condition in foo\n");
+    break;
+  case 2:
+    printf("Detected an error2 condition in foo\n");
+    break;
+  default:
+    printf("Unknown error condition in foo\n");
+  }
+  exit(0);
+}
+
+void foo(void) {
+  if (error1)
+    longjmp(buf, 1);
+  bar();
+}
+
+void bar(void) {
+  if (error2)
+    longjmp(buf, 2);
 }
